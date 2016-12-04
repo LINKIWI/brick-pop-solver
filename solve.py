@@ -17,12 +17,12 @@ class SolutionState:
         return '{board}\n{steps}'.format(board=str(self.board), steps=self.steps)
 
 
-def solve_board_dfs(board, steps=[]):
+def solve_board_dfs(board, steps=tuple([])):
     if board.is_solved():
         return steps
 
     possible_solutions = (
-        solve_board_dfs(new_board, steps + [step])
+        solve_board_dfs(new_board, steps + (step,))
         for (step, new_board) in board.available_moves()
     )
     valid_solutions = (
