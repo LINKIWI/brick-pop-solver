@@ -75,8 +75,6 @@ def render_step_image(board, step, file_name):
 
 
 def simulate_touch_events(solution):
-    subprocess.call(['adb', 'devices'])
-
     for idx, step in enumerate(solution):
         touch_x = IMAGE_BLOCK_START_J + IMAGE_BLOCK_OFFSET * step.j
         touch_y = IMAGE_BLOCK_START_I + IMAGE_BLOCK_OFFSET * step.i
