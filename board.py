@@ -1,6 +1,7 @@
+from collections import deque
+
 from color import EmptyColor
 from coordinate import Coordinate
-from collections import deque
 
 
 def coordinate_map_to_grid(coordinate_map):
@@ -103,6 +104,9 @@ class Board:
 
     def is_coordinate_valid(self, coord):
         return 0 <= coord.i < len(self.board) and 0 <= coord.j < len(self.board[0])
+
+    def colors(self):
+        return set(self.coordinate_map.values())
 
     def at(self, coord):
         return self.board[coord.i][coord.j]
