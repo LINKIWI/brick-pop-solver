@@ -1,11 +1,18 @@
+import struct
+import subprocess
+import sys
+
 import cv2
 import numpy as np
-import struct
 
 from board import Board
 from color import Color
 from color import EmptyColor
 from coordinate import Coordinate
+
+IMAGE_BLOCK_OFFSET = 142
+IMAGE_BLOCK_START_I = 625
+IMAGE_BLOCK_START_J = 70
 
 
 def solve_board_dfs(board, steps=tuple([])):
@@ -29,31 +36,27 @@ def replay_steps(board, steps, idx=0):
     if len(steps) <= 1:
         return
 
-    display_step(board, steps[0], 'step-{idx}.png'.format(idx=idx))
+    render_step_image(board, steps[0], 'step-{idx}.png'.format(idx=idx))
     replay_steps(board.pop_from(steps[0]), steps[1:], idx=idx + 1)
 
 
-def load_board():
-    img = cv2.imread('brick-pop.png', cv2.IMREAD_COLOR)
-
-    offset = 142
-    start_i = 625
-    start_j = 70
+def load_board(board_image_file_name):
+    img = cv2.imread(board_image_file_name, cv2.IMREAD_COLOR)
 
     coordinate_map = {}
     for i in range(10):
         for j in range(10):
-            bgr = img[start_i + i * offset][start_j + j * offset]
-            hex = struct.pack('BBB', *bgr).encode('hex')
-            if hex == 'e4eff7':
+            bgr = img[IMAGE_BLOCK_START_I + i * IMAGE_BLOCK_OFFSET][IMAGE_BLOCK_START_J + j * IMAGE_BLOCK_OFFSET]
+            color_code = struct.pack('BBB', *bgr).encode('hex')
+            if color_code == 'e4eff7':
                 coordinate_map[Coordinate(i, j)] = EmptyColor()
             else:
-                coordinate_map[Coordinate(i, j)] = Color(hex)
+                coordinate_map[Coordinate(i, j)] = Color(color_code)
 
     return Board(coordinate_map)
 
 
-def display_step(board, step, file_name):
+def render_step_image(board, step, file_name):
     img = np.array([
         [(0, 0, 0) for _ in range(1440)]
         for _ in range(2560)
@@ -71,23 +74,21 @@ def display_step(board, step, file_name):
     cv2.imwrite(file_name, img)
 
 
-def write_adb_script(solution):
-    fd = open('script.sh', 'w')
+def simulate_touch_events(solution):
+    subprocess.call(['adb', 'devices'])
 
     for idx, step in enumerate(solution):
-        x = 70 + 142 * step.j
-        y = 625 + 142 * step.i
+        touch_x = IMAGE_BLOCK_START_J + IMAGE_BLOCK_OFFSET * step.j
+        touch_y = IMAGE_BLOCK_START_I + IMAGE_BLOCK_OFFSET * step.i
 
-        fd.write('echo Simulating touch events for step {idx}...\n'.format(idx=idx))
-        fd.write('adb shell input tap {x} {y}\n'.format(x=x, y=y))
-        fd.write('sleep 1\n')
-
-    fd.close()
+        print 'Simulating touch events for step {idx}...'.format(idx=idx + 1)
+        subprocess.call(['adb', 'shell', 'input', 'tap', str(touch_x), str(touch_y)])
+        subprocess.call(['sleep', '1'])
 
 
-def solve():
+def solve(board_image_file_name):
     print 'Reading board image...'
-    board = load_board()
+    board = load_board(board_image_file_name)
 
     print 'Board:'
     print board
@@ -96,9 +97,21 @@ def solve():
 
     print 'Solving...'
     solution = solve_board_dfs(board)
-    write_adb_script(solution)
+
+    print 'Solution ({num_steps} steps):'.format(num_steps=len(solution))
     print solution
+
+    print 'Using ADB to trigger touch events...'
+    simulate_touch_events(solution)
+
+
+def main():
+    if len(sys.argv) < 2:
+        print 'Specify the file name corresponding to the Brick Pop screenshot as the first positional argument.'
+        sys.exit(1)
+
+    solve(sys.argv[1])
 
 
 if __name__ == '__main__':
-    solve()
+    main()
