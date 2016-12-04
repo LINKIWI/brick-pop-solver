@@ -20,6 +20,9 @@ class Color:
     def __hash__(self):
         return hash(self.name)
 
+    def __len__(self):
+        return len(self.name)
+
 
 class EmptyColor(Color):
     def __init__(self):

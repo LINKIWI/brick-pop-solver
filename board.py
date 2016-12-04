@@ -46,9 +46,7 @@ class Board:
     def get_neighbors(self, coord):
         neighboring_coordinates = [
             Coordinate(coord.i + i_offset, coord.j + j_offset)
-            for j_offset in range(-1, 2)
-            for i_offset in range(-1, 2)
-            if i_offset != j_offset
+            for i_offset, j_offset in [(-1, 0), (0, 1), (1, 0), (0, -1)]
         ]
 
         return filter(self.is_coordinate_valid, neighboring_coordinates)
@@ -70,12 +68,17 @@ class Board:
         return flood
 
     def available_moves(self):
+        pools = set([])
+
         moves = []
         for coord in self.coordinate_map:
             try:
-                moves.append((coord, self.pop_from(coord)))
+                new_board = self.pop_from(coord)
+                if str(new_board) not in pools:
+                    pools.add(str(new_board))
+                    moves.append((coord, new_board))
             except InvalidPopException:
-                continue
+                pass
 
         return moves
 
@@ -148,8 +151,13 @@ class Board:
         ]
 
     def __repr__(self):
+        try:
+            color_length = max(map(len, self.coordinate_map.values()))
+        except:
+            color_length = 1
+
         return '\n'.join([
-            ' '.join(map(lambda elem: '-' if elem.is_empty() else str(elem), self.board[row]))
+            ' '.join(map(lambda elem: '-' * color_length if elem.is_empty() else str(elem), self.board[row]))
             for row in range(len(self.board))
         ])
 
