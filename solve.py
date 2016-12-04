@@ -21,12 +21,17 @@ def solve_board_dfs(board, steps=[]):
     if board.is_solved():
         return steps
 
-    for step, new_board in board.available_moves():
-        solution = solve_board_dfs(new_board, steps + [step])
-        if solution:
-            return solution
+    possible_solutions = (
+        solve_board_dfs(new_board, steps + [step])
+        for (step, new_board) in board.available_moves()
+    )
+    valid_solutions = (
+        steps
+        for steps in possible_solutions
+        if steps is not None
+    )
 
-    return None
+    return next(valid_solutions, None)
 
 
 def replay_steps(board, steps, idx=0):
