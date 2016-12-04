@@ -8,15 +8,6 @@ from color import EmptyColor
 from coordinate import Coordinate
 
 
-class SolutionState:
-    def __init__(self, board, steps):
-        self.board = board
-        self.steps = steps
-
-    def __repr__(self):
-        return '{board}\n{steps}'.format(board=str(self.board), steps=self.steps)
-
-
 def solve_board_dfs(board, steps=tuple([])):
     if board.is_solved():
         return steps
