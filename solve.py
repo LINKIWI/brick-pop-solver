@@ -10,12 +10,22 @@ from color import Color
 from color import EmptyColor
 from coordinate import Coordinate
 
+# The pixel offset distance between any two color blocks
 IMAGE_BLOCK_OFFSET = 142
+# The vertical pixel offset from the top of the screen of the first color block
 IMAGE_BLOCK_START_I = 625
+# The horizontal pixel offset from the left of the screen of the first color block
 IMAGE_BLOCK_START_J = 70
 
 
 def solve_board_dfs(board, steps=tuple([])):
+    """
+    Solve the board using a DFS search.
+
+    :param board: The board to solve.
+    :param steps: The number of steps taken thus far to reach the input board configuration.
+    :return: A tuple of Coordinates representing steps that can be used to solve the board.
+    """
     if board.is_solved():
         return steps
 
@@ -33,7 +43,15 @@ def solve_board_dfs(board, steps=tuple([])):
 
 
 def replay_steps(board, steps, idx=0):
-    if len(steps) <= 1:
+    """
+    Given the initial board and a series of steps, generate image renders representing the block
+    locations to be popped for each step.
+
+    :param board: The initial board configuration.
+    :param steps: A tuple of steps to take on the initial board.
+    :param idx: The initial step index.
+    """
+    if not len(steps):
         return
 
     render_step_image(board, steps[0], 'step-{idx}.png'.format(idx=idx))
@@ -41,6 +59,12 @@ def replay_steps(board, steps, idx=0):
 
 
 def load_board(board_image_file_name):
+    """
+    Parse the input board screenshot into a Board object.
+
+    :param board_image_file_name: Path to the screenshot of the board.
+    :return: A Board instance representing the input board.
+    """
     img = cv2.imread(board_image_file_name, cv2.IMREAD_COLOR)
 
     coordinate_map = {}
@@ -57,13 +81,24 @@ def load_board(board_image_file_name):
 
 
 def render_step_image(board, step, file_name):
+    """
+    Render an image representing the step to take on a board. The desired step coordinate is
+    highlighted in white.
+
+    :param board: The current board configuration.
+    :param step: The desired step to visualize.
+    :param file_name: The file name to which the rendered image should be saved.
+    """
     img = np.array([
         [(0, 0, 0) for _ in range(1440)]
         for _ in range(2560)
     ])
 
     for coord in board.coordinate_map:
-        img_coord = Coordinate(625 + 142 * coord.i, 70 + 142 * coord.j)
+        img_coord = Coordinate(
+            IMAGE_BLOCK_START_I + IMAGE_BLOCK_OFFSET * coord.i,
+            IMAGE_BLOCK_START_J + IMAGE_BLOCK_OFFSET * coord.j,
+        )
         for i in range(img_coord.i - 50, img_coord.i + 50):
             for j in range(img_coord.j - 50, img_coord.j + 50):
                 if coord == step:
@@ -75,6 +110,11 @@ def render_step_image(board, step, file_name):
 
 
 def simulate_touch_events(solution):
+    """
+    Directly use ADB to simulate touch events that correspond to the given solution steps.
+
+    :param solution: A tuple of coordinates describing the full solution.
+    """
     for idx, step in enumerate(solution):
         touch_x = IMAGE_BLOCK_START_J + IMAGE_BLOCK_OFFSET * step.j
         touch_y = IMAGE_BLOCK_START_I + IMAGE_BLOCK_OFFSET * step.i
@@ -85,6 +125,11 @@ def simulate_touch_events(solution):
 
 
 def solve(board_image_file_name):
+    """
+    Run the full solve procedure on some input board screenshot.
+
+    :param board_image_file_name: Path to the screenshot of the board.
+    """
     print 'Reading board image...'
     board = load_board(board_image_file_name)
 
@@ -104,6 +149,9 @@ def solve(board_image_file_name):
 
 
 def main():
+    """
+    Main procedure; accept the file name as a command-line parameter and run the solver.
+    """
     if len(sys.argv) < 2:
         print 'Specify the file name corresponding to the Brick Pop screenshot as the first positional argument.'
         sys.exit(1)

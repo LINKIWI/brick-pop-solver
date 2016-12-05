@@ -1,4 +1,8 @@
 class Coordinate:
+    """
+    Representation of an (i, j)-indexed two-dimensional coordinate.
+    """
+
     def __init__(self, i, j):
         self.i = i
         self.j = j

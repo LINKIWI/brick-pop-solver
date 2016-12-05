@@ -1,4 +1,8 @@
 class Color:
+    """
+    Representation of an element on the game board.
+    """
+
     def __init__(self, name):
         self.name = name
 
@@ -25,6 +29,11 @@ class Color:
 
 
 class EmptyColor(Color):
+    """
+    Representation of an empty element on the game board (e.g. a space that has already been
+    cleared).
+    """
+
     def __init__(self):
         Color.__init__(self, 'EMPTY')
 
