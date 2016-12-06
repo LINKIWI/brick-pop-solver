@@ -85,21 +85,6 @@ class Board:
         """
         return not len(self.board)
 
-    def get_neighbors(self, coord):
-        """
-        For a given coordinate, get a list of valid neighboring locations. Game rules dictate that
-        the neighbor can only be immediately above, below, or to the side of the origin coordinate.
-
-        :param coord: Coordinate on this board.
-        :return: A list of valid Coordinate neighbors.
-        """
-        neighboring_coordinates = [
-            Coordinate(coord.i + i_offset, coord.j + j_offset)
-            for i_offset, j_offset in [(-1, 0), (0, 1), (1, 0), (0, -1)]
-        ]
-
-        return filter(self.is_coordinate_valid, neighboring_coordinates)
-
     def flood_indices(self, coord):
         """
         For a given coordinate, get a list of valid indices that are in the same flood pool as the
@@ -117,7 +102,7 @@ class Board:
 
             valid_neighbors = filter(
                 lambda index: self.at(index) == self.at(coord) and index not in flood,
-                self.get_neighbors(location),
+                self._get_neighbors(location),
             )
             queue.extend(valid_neighbors)
 
@@ -177,15 +162,6 @@ class Board:
         """
         return self._contract_cols()._contract_rows()
 
-    def is_coordinate_valid(self, coord):
-        """
-        Check if the specified coordinate is valid on this board.
-
-        :param coord: Coordinate on this board.
-        :return: True if the coordinate exists on this board; False otherwise.
-        """
-        return 0 <= coord.i < len(self.board) and 0 <= coord.j < len(self.board[0])
-
     def colors(self):
         """
         Determine a set of all the unique colors represented on this board.
@@ -201,7 +177,31 @@ class Board:
         :param coord: Coordinate on this board.
         :return: The Color at the specified location or None if the coordinate is invalid.
         """
-        return self.board[coord.i][coord.j] if self.is_coordinate_valid(coord) else None
+        return self.board[coord.i][coord.j] if self._is_coordinate_valid(coord) else None
+
+    def _is_coordinate_valid(self, coord):
+        """
+        Check if the specified coordinate is valid on this board.
+
+        :param coord: Coordinate on this board.
+        :return: True if the coordinate exists on this board; False otherwise.
+        """
+        return 0 <= coord.i < len(self.board) and 0 <= coord.j < len(self.board[0])
+
+    def _get_neighbors(self, coord):
+        """
+        For a given coordinate, get a list of valid neighboring locations. Game rules dictate that
+        the neighbor can only be immediately above, below, or to the side of the origin coordinate.
+
+        :param coord: Coordinate on this board.
+        :return: A list of valid Coordinate neighbors.
+        """
+        neighboring_coordinates = [
+            Coordinate(coord.i + i_offset, coord.j + j_offset)
+            for i_offset, j_offset in [(-1, 0), (0, 1), (1, 0), (0, -1)]
+        ]
+
+        return filter(self._is_coordinate_valid, neighboring_coordinates)
 
     def _contract_cols(self):
         """
