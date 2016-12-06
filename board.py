@@ -14,8 +14,8 @@ def coordinate_map_to_grid(coordinate_map):
     if not coordinate_map:
         return []
 
-    max_row = max(map(lambda coord: coord.i, coordinate_map.keys()))
-    max_col = max(map(lambda coord: coord.j, coordinate_map.keys()))
+    max_row = max([coord.i for coord in coordinate_map.keys()])
+    max_col = max([coord.j for coord in coordinate_map.keys()])
 
     return [
         [
@@ -147,12 +147,12 @@ class Board:
             raise InvalidPopException('Unable to pop from a flood group with only one element')
 
         # Update the coordinate map with a None value for all elements that are to be removed
-        update_coordinate_map = {
+        update_coordinate_map = dict(self.coordinate_map, **{
             pop_index: EmptyColor()
             for pop_index in to_pop
-        }
+        })
 
-        return Board(dict(self.coordinate_map, **update_coordinate_map)).contract()
+        return Board(update_coordinate_map).contract()
 
     def contract(self):
         """
@@ -274,10 +274,7 @@ class Board:
 
         :return: A string representation of the board.
         """
-        try:
-            color_length = max(map(len, self.coordinate_map.values()))
-        except:
-            color_length = 1
+        color_length = max(map(len, self.coordinate_map.values()) or [''])
 
         return '\n'.join([
             ' '.join(map(lambda elem: '-' * color_length if elem.is_empty() else str(elem), self.board[row]))
