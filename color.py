@@ -4,9 +4,19 @@ class Color:
     """
 
     def __init__(self, name):
+        """
+        Create a new board item.
+
+        :param name: Hexadecimal representation of the color, e.g. 'FFFFFF'.
+        """
         self.name = name
 
     def is_empty(self):
+        """
+        A Color item on a board is not empty.
+
+        :return: False, always.
+        """
         return False
 
     def __eq__(self, other):
@@ -35,7 +45,15 @@ class EmptyColor(Color):
     """
 
     def __init__(self):
+        """
+        Create an empty board item.
+        """
         Color.__init__(self, 'EMPTY')
 
     def is_empty(self):
+        """
+        An EmptyColor is defined as empty.
+
+        :return: True, always.
+        """
         return True
