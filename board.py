@@ -40,22 +40,40 @@ def grid_to_coordinate_map(grid):
     }
 
 
+def flatten(l):
+    """
+    Flatten a two-dimensional list.
+
+    :param l: The two-dimensional list.
+    :return: A one-dimensional, flattened list.
+    """
+    return [item for sublist in l for item in sublist]
+
+
 class Board:
     """
     Representation of the game board.
     """
 
-    def __init__(self, coordinate_map):
+    def __init__(self, grid):
         """
         Construct a Board from a coordinate map.
         Do not call this method directly; rather, use the static from_coordinate_map and from_grid
         methods on Board. These static methods do proper input validation before directly calling
         this constructor.
 
-        :param coordinate_map: A map from Coordinate to Color that describes this board.
+        :param grid: The grid of colors representing the board.
         """
-        self.coordinate_map = coordinate_map
-        self.board = coordinate_map_to_grid(coordinate_map)
+        self.board = grid
+        self.coords = flatten([
+            [
+                Coordinate(i, j)
+                for j in range(len(self.board[0]))
+                if not self.board[i][j].is_empty()
+            ]
+            for i in range(len(self.board))
+        ])
+        self.colors = set(filter(lambda loc: not loc.is_empty(), flatten(self.board)))
 
     @staticmethod
     def from_coordinate_map(coordinate_map):
@@ -75,7 +93,7 @@ class Board:
         :param grid: A list of lists whose elements are Colors.
         :return: A Board instance describing the input.
         """
-        return Board(grid_to_coordinate_map(grid))
+        return Board(grid)
 
     def is_solved(self):
         """
@@ -119,7 +137,7 @@ class Board:
         pools = set([])
 
         moves = []
-        for coord in self.coordinate_map:
+        for coord in self.coords:
             try:
                 new_board = self.pop_from(coord)
                 if str(new_board) not in pools:
@@ -147,12 +165,15 @@ class Board:
             raise InvalidPopException('Unable to pop from a flood group with only one element')
 
         # Update the coordinate map with a None value for all elements that are to be removed
-        update_coordinate_map = dict(self.coordinate_map, **{
-            pop_index: EmptyColor()
-            for pop_index in to_pop
-        })
+        update_grid = filter(lambda elem: elem, [
+            [
+                EmptyColor() if Coordinate(i, j) in to_pop else self.at(Coordinate(i, j))
+                for j in range(len(self.board[i]))
+            ]
+            for i in range(len(self.board))
+        ])
 
-        return Board(update_coordinate_map).contract()
+        return Board.from_grid(update_grid).contract()
 
     def contract(self):
         """
@@ -162,14 +183,6 @@ class Board:
         """
         return self._contract_cols()._contract_rows()
 
-    def colors(self):
-        """
-        Determine a set of all the unique colors represented on this board.
-
-        :return: A set of Color objects represented on this board.
-        """
-        return set(self.coordinate_map.values())
-
     def at(self, coord):
         """
         Retrieve the Color at a particular coordinate location.
@@ -177,7 +190,7 @@ class Board:
         :param coord: Coordinate on this board.
         :return: The Color at the specified location or None if the coordinate is invalid.
         """
-        return self.board[coord.i][coord.j] if self._is_coordinate_valid(coord) else None
+        return self.board[coord.i][coord.j]
 
     def _is_coordinate_valid(self, coord):
         """
@@ -246,17 +259,17 @@ class Board:
         # For each coordinate, determine the amount by which the index needs to vertically drop
         drop_counts = {
             coord: len(filter(lambda elem: elem.is_empty(), self._extract_col(coord.j)[coord.i:]))
-            for coord in self.coordinate_map
+            for coord in self.coords
             if not self.at(coord).is_empty()
         }
 
         update_coordinate_map = {
             coord.offset(drop_counts.get(coord, 0), 0): self.at(coord)
-            for coord in self.coordinate_map.keys()
+            for coord in self.coords
             if drop_counts.get(coord, 0) > 0 or not self.at(coord).is_empty()
         }
 
-        return Board(update_coordinate_map)
+        return Board.from_coordinate_map(update_coordinate_map)
 
     def _extract_col(self, col):
         """
@@ -277,7 +290,7 @@ class Board:
 
         :return: A string representation of the board.
         """
-        color_length = max(map(len, self.coordinate_map.values()) or [''])
+        color_length = max(map(len, self.colors) or [''])
 
         return '\n'.join([
             ' '.join(map(

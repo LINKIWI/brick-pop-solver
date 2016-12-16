@@ -79,7 +79,7 @@ def load_board(board_image_file_name):
             else:
                 coordinate_map[Coordinate(i, j)] = Color(color_code)
 
-    return Board(coordinate_map)
+    return Board.from_coordinate_map(coordinate_map)
 
 
 def render_step_image(board, step, file_name):
@@ -96,7 +96,7 @@ def render_step_image(board, step, file_name):
         for _ in range(2560)
     ])
 
-    for coord in board.coordinate_map:
+    for coord in board.coords:
         img_coord = Coordinate(
             IMAGE_BLOCK_START_I + IMAGE_BLOCK_OFFSET * coord.i,
             IMAGE_BLOCK_START_J + IMAGE_BLOCK_OFFSET * coord.j,
@@ -141,7 +141,7 @@ def solve(board_image_file_name):
     print 'Board:'
     print board
     print 'Colors:'
-    print board.colors()
+    print board.colors
 
     print 'Solving...'
     solution = solve_board_dfs(board)
