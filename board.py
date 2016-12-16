@@ -65,15 +65,14 @@ class Board:
         :param grid: The grid of colors representing the board.
         """
         self.board = grid
-        self.coords = flatten([
-            [
+        self.coords = flatten((
+            (
                 Coordinate(i, j)
                 for j in range(len(self.board[0]))
                 if not self.board[i][j].is_empty()
-            ]
+            )
             for i in range(len(self.board))
-        ])
-        self.colors = set(filter(lambda loc: not loc.is_empty(), flatten(self.board)))
+        ))
 
     @staticmethod
     def from_coordinate_map(coordinate_map):
@@ -164,7 +163,7 @@ class Board:
         if len(to_pop) == 1:
             raise InvalidPopException('Unable to pop from a flood group with only one element')
 
-        # Update the coordinate map with a None value for all elements that are to be removed
+        # Create a new grid with popped items changed to EmptyColors
         update_grid = filter(lambda elem: elem, [
             [
                 EmptyColor() if Coordinate(i, j) in to_pop else self.at(Coordinate(i, j))
@@ -290,7 +289,8 @@ class Board:
 
         :return: A string representation of the board.
         """
-        color_length = max(map(len, self.colors) or [''])
+        colors = set(filter(lambda loc: not loc.is_empty(), flatten(self.board)))
+        color_length = max(map(len, colors) or [''])
 
         return '\n'.join([
             ' '.join(map(

@@ -124,7 +124,7 @@ def simulate_touch_events(solution):
 
         print 'Simulating touch events for step {idx}...'.format(idx=idx + 1)
         subprocess.call(['adb', 'shell', 'input', 'tap', str(touch_x), str(touch_y)])
-        subprocess.call(['sleep', '1'])
+        subprocess.call(['sleep', '1.2'])
 
     print 'Done!'
 
@@ -140,8 +140,6 @@ def solve(board_image_file_name):
 
     print 'Board:'
     print board
-    print 'Colors:'
-    print board.colors
 
     print 'Solving...'
     solution = solve_board_dfs(board)
