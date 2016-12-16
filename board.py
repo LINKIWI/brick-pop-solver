@@ -255,20 +255,20 @@ class Board:
 
         :return: A new Board whose rows are contracted.
         """
-        # For each coordinate, determine the amount by which the index needs to vertically drop
-        drop_counts = {
-            coord: len(filter(lambda elem: elem.is_empty(), self._extract_col(coord.j)[coord.i:]))
-            for coord in self.coords
-            if not self.at(coord).is_empty()
+        # For each column, determine indices in that column that are empty
+        col_empty_indices = {
+            col: [idx for idx, elem in enumerate(self._extract_col(col)) if elem.is_empty()]
+            for col in range(len(self.board[0]))
         }
 
-        update_coordinate_map = {
-            coord.offset(drop_counts.get(coord, 0), 0): self.at(coord)
-            for coord in self.coords
-            if drop_counts.get(coord, 0) > 0 or not self.at(coord).is_empty()
-        }
+        # This generates a list where each child list is a properly contracted version of that column
+        shifted_cols = [
+            ([EmptyColor()] * len(col_empty_indices[idx])) + filter(lambda elem: not elem.is_empty(), self._extract_col(idx))
+            for idx in range(len(self.board[0]))
+        ]
 
-        return Board.from_coordinate_map(update_coordinate_map)
+        # In order to create a grid again, the columns generated above need to be transposed
+        return Board.from_grid(zip(*shifted_cols))
 
     def _extract_col(self, col):
         """
