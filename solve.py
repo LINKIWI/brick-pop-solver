@@ -70,7 +70,9 @@ def load_board(board_image_file_name):
     coordinate_map = {}
     for i in range(10):
         for j in range(10):
-            bgr = img[IMAGE_BLOCK_START_I + i * IMAGE_BLOCK_OFFSET][IMAGE_BLOCK_START_J + j * IMAGE_BLOCK_OFFSET]
+            pixel_i = IMAGE_BLOCK_START_I + i * IMAGE_BLOCK_OFFSET
+            pixel_j = IMAGE_BLOCK_START_J + j * IMAGE_BLOCK_OFFSET
+            bgr = img[pixel_i][pixel_j]
             color_code = struct.pack('BBB', *bgr).encode('hex')
             if color_code == 'e4eff7':
                 coordinate_map[Coordinate(i, j)] = EmptyColor()
@@ -104,7 +106,8 @@ def render_step_image(board, step, file_name):
                 if coord == step:
                     img[i][j] = (255, 255, 255)
                 else:
-                    img[i][j] = np.array(struct.unpack('BBB', board.at(coord).name.decode('hex')))
+                    color_hex = board.at(coord).name.decode('hex')
+                    img[i][j] = np.array(struct.unpack('BBB', color_hex))
 
     cv2.imwrite(file_name, img)
 
@@ -122,6 +125,8 @@ def simulate_touch_events(solution):
         print 'Simulating touch events for step {idx}...'.format(idx=idx + 1)
         subprocess.call(['adb', 'shell', 'input', 'tap', str(touch_x), str(touch_y)])
         subprocess.call(['sleep', '1'])
+
+    print 'Done!'
 
 
 def solve(board_image_file_name):
@@ -153,7 +158,8 @@ def main():
     Main procedure; accept the file name as a command-line parameter and run the solver.
     """
     if len(sys.argv) < 2:
-        print 'Specify the file name corresponding to the Brick Pop screenshot as the first positional argument.'
+        print 'Specify the file name corresponding to the Brick Pop screenshot as the first ' \
+              'positional argument.'
         sys.exit(1)
 
     solve(sys.argv[1])

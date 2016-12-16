@@ -218,7 +218,10 @@ class Board:
         }
 
         # Get a list of all the columns that need to be removed
-        to_remove_cols = filter(lambda col: col_empty_counts[col] == len(self.board), col_empty_counts.keys())
+        to_remove_cols = filter(
+            lambda col: col_empty_counts[col] == len(self.board),
+            col_empty_counts.keys(),
+        )
 
         update_grid = [
             [
@@ -277,7 +280,10 @@ class Board:
         color_length = max(map(len, self.coordinate_map.values()) or [''])
 
         return '\n'.join([
-            ' '.join(map(lambda elem: '-' * color_length if elem.is_empty() else str(elem), self.board[row]))
+            ' '.join(map(
+                lambda elem: '-' * color_length if elem.is_empty() else str(elem),
+                self.board[row],
+            ))
             for row in range(len(self.board))
         ])
 
