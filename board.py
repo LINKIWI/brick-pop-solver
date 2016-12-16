@@ -261,9 +261,12 @@ class Board:
             for col in range(len(self.board[0]))
         }
 
-        # This generates a list where each child list is a properly contracted version of that column
+        # Generate a list where each sublist is a properly contracted version of each column
         shifted_cols = [
-            ([EmptyColor()] * len(col_empty_indices[idx])) + filter(lambda elem: not elem.is_empty(), self._extract_col(idx))
+            ([EmptyColor()] * len(col_empty_indices[idx])) + filter(
+                lambda elem: not elem.is_empty(),
+                self._extract_col(idx)
+            )
             for idx in range(len(self.board[0]))
         ]
 
