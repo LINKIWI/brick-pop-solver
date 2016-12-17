@@ -221,14 +221,11 @@ def solve(board_image_file_name):
     print 'Board:'
     print board
 
-    print 'Solving...'
+    print 'Solving ({num_processes} processes)...'.format(num_processes=NUM_PARALLEL_PROCESSES)
     start_time = time.time()
     solution = parallel_solve(board)
     end_time = time.time()
-    print 'Found a solution using {num_processes} parallel processes in {duration} seconds'.format(
-        num_processes=NUM_PARALLEL_PROCESSES,
-        duration=end_time - start_time,
-    )
+    print 'Found a solution in {duration} seconds'.format(duration=end_time - start_time)
 
     print 'Solution ({num_steps} steps):'.format(num_steps=len(solution))
     print solution
