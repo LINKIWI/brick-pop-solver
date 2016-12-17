@@ -176,11 +176,35 @@ class Board:
 
     def contract(self):
         """
-        Generate a new Board whose columns and rows are contracted.
+        Generate a new Board whose columns and rows are contracted; e.g. all columns consisting
+        only of empty elements are removed and all elements are pushed as far to the bottom of
+        the board as possible (taking up the space of formerly empty elements).
 
         :return: A board instance whose physical configuration is contracted.
         """
-        return self._contract_cols()._contract_rows()
+        # For each column, determine indices in that column that are empty
+        col_empty_indices = {
+            col: [idx for idx, elem in enumerate(self._extract_col(col)) if elem.is_empty()]
+            for col in range(len(self.board[0]))
+        }
+
+        # Generate a list where each sublist is a properly contracted version of each column
+        shifted_cols = [
+            ([EmptyColor()] * len(col_empty_indices[idx])) + filter(
+                lambda elem: not elem.is_empty(),
+                self._extract_col(idx)
+            )
+            for idx in range(len(self.board[0]))
+        ]
+
+        # Remove all columns that only have empty colors
+        cols_contracted = filter(
+            lambda col: any((not elem.is_empty() for elem in col)),
+            shifted_cols,
+        )
+
+        # In order to create a grid again, the columns generated above need to be transposed
+        return Board.from_grid(zip(*cols_contracted))
 
     def at(self, coord):
         """
@@ -214,64 +238,6 @@ class Board:
         ]
 
         return filter(self._is_coordinate_valid, neighboring_coordinates)
-
-    def _contract_cols(self):
-        """
-        Contract columns of the board. This involves completely eliminating columns that contain
-        only EmptyColors; e.g., all Colors that exist to the right of the empty column can be
-        shifted to the left.
-
-        :return: A new Board whose columns are contracted.
-        """
-        # Build a map of the number of empty rows in each column
-        col_empty_counts = {
-            col: len(filter(lambda elem: elem.is_empty(), self._extract_col(col)))
-            for col in range(len(self.board[0]))
-        }
-
-        # Get a list of all the columns that need to be removed
-        to_remove_cols = filter(
-            lambda col: col_empty_counts[col] == len(self.board),
-            col_empty_counts.keys(),
-        )
-
-        update_grid = [
-            [
-                col
-                for j, col in enumerate(row)
-                if j not in to_remove_cols
-            ]
-            for row in self.board
-        ]
-
-        return Board.from_grid(update_grid)
-
-    def _contract_rows(self):
-        """
-        Contract rows of the board. This involves dropping colors to be as close to the bottom of
-        the board as possible. Generally, the Board returned by this procedure will be different
-        from the existing board only if there exists at least one EmptyColor vertically separating
-        two or more Colors.
-
-        :return: A new Board whose rows are contracted.
-        """
-        # For each column, determine indices in that column that are empty
-        col_empty_indices = {
-            col: [idx for idx, elem in enumerate(self._extract_col(col)) if elem.is_empty()]
-            for col in range(len(self.board[0]))
-        }
-
-        # Generate a list where each sublist is a properly contracted version of each column
-        shifted_cols = [
-            ([EmptyColor()] * len(col_empty_indices[idx])) + filter(
-                lambda elem: not elem.is_empty(),
-                self._extract_col(idx)
-            )
-            for idx in range(len(self.board[0]))
-        ]
-
-        # In order to create a grid again, the columns generated above need to be transposed
-        return Board.from_grid(zip(*shifted_cols))
 
     def _extract_col(self, col):
         """
