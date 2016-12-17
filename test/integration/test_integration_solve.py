@@ -50,7 +50,8 @@ class TestIntegrationSerialSolve(unittest.TestCase):
 
     def assert_valid_serial_solve(self, board):
         solution = time_func(solve_board_dfs, board)
-        self.assertTrue(is_solution_valid(board, solution))
+        self.assertFalse(solution.is_empty())
+        self.assertTrue(is_solution_valid(board, solution.get_steps()))
 
 
 class TestIntegrationParallelSolve(unittest.TestCase):
@@ -68,4 +69,5 @@ class TestIntegrationParallelSolve(unittest.TestCase):
 
     def assert_valid_parallel_solve(self, board):
         solution = time_func(parallel_solve, board)
-        self.assertTrue(is_solution_valid(board, solution))
+        self.assertFalse(solution.is_empty())
+        self.assertTrue(is_solution_valid(board, solution.get_steps()))
