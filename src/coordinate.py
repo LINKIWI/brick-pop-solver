@@ -35,7 +35,7 @@ class Coordinate:
     def __cmp__(self, other):
         if self.i < other.i or (self.i == other.i and self.j < other.j):
             return -1
-        if self.j > other.j:
+        if self.i > other.i or (self.i == other.i and self.j > other.j):
             return 1
         return 0
 
