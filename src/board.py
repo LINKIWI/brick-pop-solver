@@ -266,6 +266,16 @@ class Board:
             for row in range(len(self.board))
         ])
 
+    def __eq__(self, other):
+        """
+        A simple, shallow equality check on Boards is that their string representations are
+        identical.
+
+        :param other: The other Board against which to compare.
+        :return: True if the boards are equal; False otherwise.
+        """
+        return repr(self) == repr(other)
+
 
 class InvalidPopException(Exception):
     """
