@@ -157,17 +157,17 @@ def chunk(arr, n):
     Utility function to split a list into n (roughly) equal parts.
 
     :param arr: The input list.
-    :param n: The number of parts into which the list should be split. It is expected that
-              n <= len(arr); behavior for n > len(arr) is undefined.
+    :param n: The number of parts into which the list should be split.
     :return: A two-dimensional list where each sublist is a n-sized or roughly n-sized chunk of the
              input list. The elements are otherwise ordered identically as in the input list;
              i.e. flatten(output) == input.
     """
-    slice_length = int(round(len(arr) / float(n)))
+    num_slices = min(len(arr), n)
+    slice_length = int(round(len(arr) / float(num_slices)))
 
     return [
         arr[i * slice_length:(i + 1) * slice_length]
-        for i in range(n)
+        for i in range(num_slices)
     ]
 
 
