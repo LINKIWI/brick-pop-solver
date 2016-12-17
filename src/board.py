@@ -65,14 +65,6 @@ class Board:
         :param grid: The grid of colors representing the board.
         """
         self.board = grid
-        self.coords = flatten((
-            (
-                Coordinate(i, j)
-                for j in range(len(self.board[0]))
-                if not self.board[i][j].is_empty()
-            )
-            for i in range(len(self.board))
-        ))
 
     @staticmethod
     def from_coordinate_map(coordinate_map):
@@ -112,13 +104,14 @@ class Board:
         """
         queue = deque([coord])
         flood = set([])
+        flood_color = self.at(coord)
 
         while len(queue) > 0:
             location = queue.popleft()
             flood.add(location)
 
             valid_neighbors = filter(
-                lambda index: self.at(index) == self.at(coord) and index not in flood,
+                lambda index: self.at(index) == flood_color and index not in flood,
                 self._get_neighbors(location),
             )
             queue.extend(valid_neighbors)
@@ -134,16 +127,19 @@ class Board:
                  second element represents the Board instance resulting from that action.
         """
         pools = set([])
-
         moves = []
-        for coord in self.coords:
-            try:
-                new_board = self.pop_from(coord)
-                if str(new_board) not in pools:
-                    pools.add(str(new_board))
-                    moves.append((coord, new_board))
-            except InvalidPopException:
-                pass
+
+        for i, row in enumerate(self.board):
+            for j, elem in enumerate(self.board[i]):
+                if not elem.is_empty():
+                    coord = Coordinate(i, j)
+                    try:
+                        new_board = self.pop_from(coord)
+                        if str(new_board) not in pools:
+                            pools.add(str(new_board))
+                            moves.append((coord, new_board))
+                    except InvalidPopException:
+                        pass
 
         return moves
 
