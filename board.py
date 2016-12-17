@@ -164,13 +164,14 @@ class Board:
             raise InvalidPopException('Unable to pop from a flood group with only one element')
 
         # Create a new grid with popped items changed to EmptyColors
-        update_grid = filter(lambda elem: elem, [
+        empty = EmptyColor()
+        update_grid = [
             [
-                EmptyColor() if Coordinate(i, j) in to_pop else self.at(Coordinate(i, j))
+                empty if Coordinate(i, j) in to_pop else self.board[i][j]
                 for j in range(len(self.board[i]))
             ]
             for i in range(len(self.board))
-        ])
+        ]
 
         return Board.from_grid(update_grid).contract()
 
