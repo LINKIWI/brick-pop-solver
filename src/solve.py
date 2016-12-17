@@ -1,3 +1,4 @@
+import Queue
 import multiprocessing
 import struct
 import subprocess
@@ -11,6 +12,8 @@ from board import Board
 from color import Color
 from color import EmptyColor
 from coordinate import Coordinate
+from solution import EmptySolution
+from solution import Solution
 
 # The pixel offset distance between any two color blocks
 IMAGE_BLOCK_OFFSET = 142
@@ -30,7 +33,7 @@ def solve_board_dfs(board, steps=tuple([])):
     :return: A tuple of Coordinates representing steps that can be used to solve the board.
     """
     if board.is_solved():
-        return steps
+        return Solution(steps)
 
     possible_solutions = (
         solve_board_dfs(new_board, steps + (step,))
@@ -39,10 +42,10 @@ def solve_board_dfs(board, steps=tuple([])):
     valid_solutions = (
         steps
         for steps in possible_solutions
-        if steps is not None
+        if not steps.is_empty()
     )
 
-    return next(valid_solutions, None)
+    return next(valid_solutions, EmptySolution())
 
 
 def solution_search(queue, available_moves, steps=tuple([])):
@@ -60,9 +63,15 @@ def solution_search(queue, available_moves, steps=tuple([])):
     for step, board in available_moves:
         solution_steps = steps + (step,)
         if board.is_solved():
-            return queue.put(solution_steps)
+            return queue.put(Solution(solution_steps))
 
         solution_search(queue, board.available_moves(), solution_steps)
+
+    if not steps:
+        # If logic reaches this point in execution and there are no valid steps built up yet, the
+        # input board configuration is not solvable. An EmptySolution is inserted into the queue,
+        # and logic higher up the stack handles this appropriately.
+        return queue.put(EmptySolution())
 
 
 def replay_steps(board, steps, idx=0):
@@ -173,9 +182,32 @@ def parallel_solve(board):
     for p in processes:
         p.start()
 
-    # Get a solution from the shared-memory queue. This is a blocking operation and will be
-    # populated once one of the processes generates a valid solution.
-    solution = queue.get()
+    # The logic that follows involves trying to (asynchronously) retrieve an item from the
+    # shared-memory queue. The queue can contain either a valid solution or an empty solution.
+    solution = EmptySolution()
+    num_failed_solves = 0
+    while True:
+        if num_failed_solves >= len(processes):
+            # If we have failed the same number as times as there are processes, that means all
+            # starting points were not able to return a valid solution. In this case, the only
+            # recourse is to exit, and allow logic higher up the stack to handle an EmptySolution.
+            break
+
+        try:
+            # Attempt to pull from the queue, without blocking. These operations are thread-safe.
+            solution = queue.get(block=False)
+            if solution.is_empty():
+                # One processes has failed to create a solution; keep track of this in a (pseudo-
+                # atomic) counter variable.
+                num_failed_solves += 1
+            else:
+                # A valid solution has been found!
+                break
+        except Queue.Empty:
+            # Since the Queue#get operation is non-blocking, most calls will throw an exception
+            # indicating that there are no values to retrieve from the queue. In this case, simply
+            # try again indefinitely.
+            pass
 
     # Kill the remaining processes; we've already found a solution and they don't need to be around
     # anymore
@@ -204,13 +236,19 @@ def solve(board_image_file_name):
     start_time = time.time()
     solution = parallel_solve(board)
     end_time = time.time()
-    print 'Found a solution in {duration} seconds'.format(duration=end_time - start_time)
 
-    print 'Solution ({num_steps} steps):'.format(num_steps=len(solution))
-    print solution
+    if not solution.is_empty():
+        print 'Found a solution in {duration} seconds'.format(duration=end_time - start_time)
+    else:
+        print 'The input board configuration has no solution!'
+        sys.exit(1)
+
+    solution_steps = solution.get_steps()
+    print 'Solution ({num_steps} steps):'.format(num_steps=len(solution_steps))
+    print solution_steps
 
     print 'Using ADB to trigger touch events...'
-    simulate_touch_events(solution)
+    simulate_touch_events(solution_steps)
 
     print 'Done!'
 
