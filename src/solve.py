@@ -23,31 +23,6 @@ IMAGE_BLOCK_START_I = 625
 IMAGE_BLOCK_START_J = 70
 
 
-def solve_board_dfs(board, steps=tuple([])):
-    """
-    Solve the board using a DFS search. This is a single-threaded implementation that explores
-    all possible solutions from a starting board configuration.
-
-    :param board: The board to solve.
-    :param steps: The steps taken thus far to reach the input board configuration.
-    :return: A tuple of Coordinates representing steps that can be used to solve the board.
-    """
-    if board.is_solved():
-        return Solution(steps)
-
-    possible_solutions = (
-        solve_board_dfs(new_board, steps + (step,))
-        for (step, new_board) in board.available_moves()
-    )
-    valid_solutions = (
-        steps
-        for steps in possible_solutions
-        if not steps.is_empty()
-    )
-
-    return next(valid_solutions, EmptySolution())
-
-
 def solution_search(queue, available_moves, steps=tuple([])):
     """
     Find a solution to the board given a list of available moves. This is a parallel-friendly
@@ -157,6 +132,31 @@ def simulate_touch_events(solution):
         print 'Simulating touch events for step {idx}...'.format(idx=idx + 1)
         subprocess.call(['adb', 'shell', 'input', 'tap', str(touch_x), str(touch_y)])
         subprocess.call(['sleep', '1.2'])
+
+
+def serial_solve(board, steps=tuple([])):
+    """
+    Solve the board using a serial DFS search. This is a single-threaded implementation that
+    explores all possible solutions from a starting board configuration.
+
+    :param board: The board to solve.
+    :param steps: The steps taken thus far to reach the input board configuration.
+    :return: A tuple of Coordinates representing steps that can be used to solve the board.
+    """
+    if board.is_solved():
+        return Solution(steps)
+
+    possible_solutions = (
+        serial_solve(new_board, steps + (step,))
+        for (step, new_board) in board.available_moves()
+    )
+    valid_solutions = (
+        steps
+        for steps in possible_solutions
+        if not steps.is_empty()
+    )
+
+    return next(valid_solutions, EmptySolution())
 
 
 def parallel_solve(board):

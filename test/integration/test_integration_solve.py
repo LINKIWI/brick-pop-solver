@@ -4,7 +4,7 @@ import unittest
 
 from solve import load_board
 from solve import parallel_solve
-from solve import solve_board_dfs
+from solve import serial_solve
 
 
 cwd = os.path.dirname(__file__)
@@ -49,7 +49,7 @@ class TestIntegrationSerialSolve(unittest.TestCase):
         self.assert_valid_serial_solve(three_board)
 
     def assert_valid_serial_solve(self, board):
-        solution = time_func(solve_board_dfs, board)
+        solution = time_func(serial_solve, board)
         self.assertFalse(solution.is_empty())
         self.assertTrue(is_solution_valid(board, solution.get_steps()))
 
