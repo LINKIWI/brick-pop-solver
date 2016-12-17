@@ -19,7 +19,7 @@ IMAGE_BLOCK_START_I = 625
 # The horizontal pixel offset from the left of the screen of the first color block
 IMAGE_BLOCK_START_J = 70
 # Number of solver processes to execute in parallel
-NUM_PARALLEL_PROCESSES = 8
+NUM_PARALLEL_PROCESSES = 24
 
 
 def solve_board_dfs(board, steps=tuple([])):
