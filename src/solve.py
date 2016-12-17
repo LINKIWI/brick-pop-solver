@@ -18,8 +18,6 @@ IMAGE_BLOCK_OFFSET = 142
 IMAGE_BLOCK_START_I = 625
 # The horizontal pixel offset from the left of the screen of the first color block
 IMAGE_BLOCK_START_J = 70
-# Number of solver processes to execute in parallel
-NUM_PARALLEL_PROCESSES = 24
 
 
 def solve_board_dfs(board, steps=tuple([])):
@@ -152,25 +150,6 @@ def simulate_touch_events(solution):
         subprocess.call(['sleep', '1.2'])
 
 
-def chunk(arr, n):
-    """
-    Utility function to split a list into n (roughly) equal parts.
-
-    :param arr: The input list.
-    :param n: The number of parts into which the list should be split.
-    :return: A two-dimensional list where each sublist is a n-sized or roughly n-sized chunk of the
-             input list. The elements are otherwise ordered identically as in the input list;
-             i.e. flatten(output) == input.
-    """
-    num_slices = min(len(arr), n)
-    slice_length = int(round(len(arr) / float(num_slices)))
-
-    return [
-        arr[i * slice_length:(i + 1) * slice_length]
-        for i in range(num_slices)
-    ]
-
-
 def parallel_solve(board):
     """
     Solve the board in parallel by generating multiple starting points and attempting to find a
@@ -186,8 +165,8 @@ def parallel_solve(board):
 
     # Divide the input into equal parts matching the number of parallel processes to use
     processes = [
-        multiprocessing.Process(target=solution_search, args=(queue, chunked_move,))
-        for chunked_move in chunk(board.available_moves(), NUM_PARALLEL_PROCESSES)
+        multiprocessing.Process(target=solution_search, args=(queue, [single_start_point],))
+        for single_start_point in board.available_moves()
     ]
 
     # Start each individual process
@@ -221,7 +200,7 @@ def solve(board_image_file_name):
     print 'Board:'
     print board
 
-    print 'Solving ({num_processes} processes)...'.format(num_processes=NUM_PARALLEL_PROCESSES)
+    print 'Solving...'
     start_time = time.time()
     solution = parallel_solve(board)
     end_time = time.time()
