@@ -1,6 +1,7 @@
 import unittest
 
 import numpy
+
 import util
 from solve import load_board
 from solve import parallel_solve
