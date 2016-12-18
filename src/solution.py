@@ -27,6 +27,9 @@ class Solution:
         """
         return self.steps
 
+    def __eq__(self, other):
+        return self.steps == other.steps
+
     def __repr__(self):
         return 'Solution({steps})'.format(steps=repr(self.steps))
 
@@ -63,9 +66,6 @@ class EmptySolution(Solution):
 
     def __repr__(self):
         return 'EmptySolution()'
-
-    def __str__(self):
-        return repr(self)
 
 
 class EmptySolutionException(Exception):
