@@ -3,23 +3,16 @@ language: python
 python:
     - 2.7
 
+before_install:
+    - sudo apt-get update
+    - sudo apt-get install python-opencv
+
 install:
     - "xargs -a requirements.txt -n 1 pip install || :"
 
 script:
     - make lint
     - make cover
-
-before_script:
-    # Full build of OpenCV from source
-    - git clone https://github.com/Itseez/opencv.git
-    - cd opencv
-    - mkdir build
-    - cd build
-    - cmake ..
-    - make -j4
-    - sudo make -j4 install
-    - cd ../..
 
 after_success:
     - coveralls
