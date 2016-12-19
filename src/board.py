@@ -40,16 +40,6 @@ def grid_to_coordinate_map(grid):
     }
 
 
-def flatten(l):
-    """
-    Flatten a two-dimensional list.
-
-    :param l: The two-dimensional list.
-    :return: A one-dimensional, flattened list.
-    """
-    return [item for sublist in l for item in sublist]
-
-
 class Board:
     """
     Representation of the game board.
@@ -255,7 +245,10 @@ class Board:
 
         :return: A string representation of the board.
         """
-        colors = set(filter(lambda loc: not loc.is_empty(), flatten(self.board)))
+        colors = set(filter(
+            lambda loc: not loc.is_empty(),
+            [elem for row in self.board for elem in row],
+        ))
         color_length = max(map(len, colors) or [''])
 
         return '\n'.join([

@@ -6,7 +6,6 @@ import sys
 import time
 
 import cv2
-import numpy as np
 
 from board import Board
 from color import Color
@@ -47,91 +46,6 @@ def solution_search(queue, available_moves, steps=tuple([])):
         # input board configuration is not solvable. An EmptySolution is inserted into the queue,
         # and logic higher up the stack handles this appropriately.
         return queue.put(EmptySolution())
-
-
-def replay_steps(board, steps, idx=0):
-    """
-    Given the initial board and a series of steps, generate image renders representing the block
-    locations to be popped for each step.
-
-    :param board: The initial board configuration.
-    :param steps: A tuple of steps to take on the initial board.
-    :param idx: The initial step index.
-    """
-    if not len(steps):
-        return
-
-    render_step_image(board, steps[0], 'step-{idx}.png'.format(idx=idx))
-    replay_steps(board.pop_from(steps[0]), steps[1:], idx=idx + 1)
-
-
-def load_board(board_image_file_name):
-    """
-    Parse the input board screenshot into a Board object.
-
-    :param board_image_file_name: Path to the screenshot of the board.
-    :return: A Board instance representing the input board.
-    """
-    img = cv2.imread(board_image_file_name, cv2.IMREAD_COLOR)
-
-    coordinate_map = {}
-    for i in range(10):
-        for j in range(10):
-            pixel_i = IMAGE_BLOCK_START_I + i * IMAGE_BLOCK_OFFSET
-            pixel_j = IMAGE_BLOCK_START_J + j * IMAGE_BLOCK_OFFSET
-            bgr = img[pixel_i][pixel_j]
-            color_code = struct.pack('BBB', *bgr).encode('hex')
-            if color_code == 'e4eff7':
-                coordinate_map[Coordinate(i, j)] = EmptyColor()
-            else:
-                coordinate_map[Coordinate(i, j)] = Color(color_code)
-
-    return Board.from_coordinate_map(coordinate_map)
-
-
-def render_step_image(board, step, file_name):
-    """
-    Render an image representing the step to take on a board. The desired step coordinate is
-    highlighted in white.
-
-    :param board: The current board configuration.
-    :param step: The desired step to visualize.
-    :param file_name: The file name to which the rendered image should be saved.
-    """
-    img = np.array([
-        [(0, 0, 0) for _ in range(1440)]
-        for _ in range(2560)
-    ])
-
-    for coord in board.coords:
-        img_coord = Coordinate(
-            IMAGE_BLOCK_START_I + IMAGE_BLOCK_OFFSET * coord.i,
-            IMAGE_BLOCK_START_J + IMAGE_BLOCK_OFFSET * coord.j,
-        )
-        for i in range(img_coord.i - 50, img_coord.i + 50):
-            for j in range(img_coord.j - 50, img_coord.j + 50):
-                if coord == step:
-                    img[i][j] = (255, 255, 255)
-                else:
-                    color_hex = board.at(coord).name.decode('hex')
-                    img[i][j] = np.array(struct.unpack('BBB', color_hex))
-
-    cv2.imwrite(file_name, img)
-
-
-def simulate_touch_events(solution):
-    """
-    Directly use ADB to simulate touch events that correspond to the given solution steps.
-
-    :param solution: A tuple of coordinates describing the full solution.
-    """
-    for idx, step in enumerate(solution):
-        touch_x = IMAGE_BLOCK_START_J + IMAGE_BLOCK_OFFSET * step.j
-        touch_y = IMAGE_BLOCK_START_I + IMAGE_BLOCK_OFFSET * step.i
-
-        print 'Simulating touch events for step {idx}...'.format(idx=idx + 1)
-        subprocess.call(['adb', 'shell', 'input', 'tap', str(touch_x), str(touch_y)])
-        subprocess.call(['sleep', '1.2'])
 
 
 def serial_solve(board, steps=tuple([])):
@@ -220,6 +134,45 @@ def parallel_solve(board):
     return solution
 
 
+def load_board(board_image_file_name):
+    """
+    Parse the input board screenshot into a Board object.
+
+    :param board_image_file_name: Path to the screenshot of the board.
+    :return: A Board instance representing the input board.
+    """
+    img = cv2.imread(board_image_file_name, cv2.IMREAD_COLOR)
+
+    coordinate_map = {}
+    for i in range(10):
+        for j in range(10):
+            pixel_i = IMAGE_BLOCK_START_I + i * IMAGE_BLOCK_OFFSET
+            pixel_j = IMAGE_BLOCK_START_J + j * IMAGE_BLOCK_OFFSET
+            bgr = img[pixel_i][pixel_j]
+            color_code = struct.pack('BBB', *bgr).encode('hex')
+            if color_code == 'e4eff7':
+                coordinate_map[Coordinate(i, j)] = EmptyColor()
+            else:
+                coordinate_map[Coordinate(i, j)] = Color(color_code)
+
+    return Board.from_coordinate_map(coordinate_map)
+
+
+def simulate_touch_events(solution):
+    """
+    Directly use ADB to simulate touch events that correspond to the given solution steps.
+
+    :param solution: A tuple of coordinates describing the full solution.
+    """
+    for idx, step in enumerate(solution):
+        touch_x = IMAGE_BLOCK_START_J + IMAGE_BLOCK_OFFSET * step.j
+        touch_y = IMAGE_BLOCK_START_I + IMAGE_BLOCK_OFFSET * step.i
+
+        print 'Simulating touch events for step {idx}...'.format(idx=idx + 1)
+        subprocess.call(['adb', 'shell', 'input', 'tap', str(touch_x), str(touch_y)])
+        subprocess.call(['sleep', '1.2'])
+
+
 def solve(board_image_file_name):
     """
     Run the full solve procedure on some input board screenshot.
@@ -239,18 +192,18 @@ def solve(board_image_file_name):
 
     if not solution.is_empty():
         print 'Found a solution in {duration} seconds'.format(duration=end_time - start_time)
+
+        solution_steps = solution.get_steps()
+        print 'Solution ({num_steps} steps):'.format(num_steps=len(solution_steps))
+        print solution_steps
+
+        print 'Using ADB to trigger touch events...'
+        simulate_touch_events(solution_steps)
+
+        print 'Done!'
     else:
         print 'The input board configuration has no solution!'
         sys.exit(1)
-
-    solution_steps = solution.get_steps()
-    print 'Solution ({num_steps} steps):'.format(num_steps=len(solution_steps))
-    print solution_steps
-
-    print 'Using ADB to trigger touch events...'
-    simulate_touch_events(solution_steps)
-
-    print 'Done!'
 
 
 def main():
@@ -260,9 +213,9 @@ def main():
     if len(sys.argv) < 2:
         print 'Specify the file name corresponding to the Brick Pop screenshot as the first ' \
               'positional argument.'
-        sys.exit(1)
+        return sys.exit(1)
 
-    solve(sys.argv[1])
+    return solve(sys.argv[1])
 
 
 if __name__ == '__main__':

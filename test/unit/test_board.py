@@ -39,10 +39,6 @@ class TestBoardUtils(unittest.TestCase):
 
         self.assertEqual(board.grid_to_coordinate_map(grid), expect_coordinate_map)
 
-    def test_flatten(self):
-        l = [[1, 2], [3], [4, 5]]
-        self.assertEqual(board.flatten(l), [1, 2, 3, 4, 5])
-
 
 class TestBoard(unittest.TestCase):
     def test_init(self):
