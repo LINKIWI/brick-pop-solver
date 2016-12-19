@@ -4,6 +4,8 @@
 
 Automated solver for the [Brick Pop](https://techcrunch.com/2016/11/29/messenger-instant-games/) Facebook Messenger game.
 
+[![Screencast](http://i.imgur.com/JNEHU0A.jpg)](https://www.youtube.com/watch?v=DVQx-ObS9I0)
+
 At a high level, this program parses a screenshot of the board, generates a step-by-step solution by simulating brick-popping gameplay, replays these events by using ADB to simulate touch events on an actual connected device to play through the solution for you.
 
 ### Algorithm Overview
