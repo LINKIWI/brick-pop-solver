@@ -8,9 +8,15 @@ Automated solver for the [Brick Pop](https://techcrunch.com/2016/11/29/messenger
 
 At a high level, this program parses a screenshot of the board, generates a step-by-step solution by simulating brick-popping gameplay, and replays these events by using ADB to simulate touch events on an actual connected device to play through the solution for you.
 
+### Related Projects
+
+It's humbling to see the number of other open source [Brick Pop solvers](https://github.com/search?utf8=%E2%9C%93&q=brick+pop) inspired by this project. If this one doesn't work for you, please see the other solvers written in a variety of languages with several unique approaches (including one using a score-optimizing [beam search](https://en.wikipedia.org/wiki/Beam_search) algorithm).
+
 ### Algorithm Overview
 
-The approach this program takes toward generating a solution is aggressive optimization of a search through a very large solution space. Effectively, the simulator considers every possible transition from one state/board configuration to another (based on some very simple rules, summarized below), and explores each of these paths using a depth-first search strategy. In the worst case, there are six unique colors on a fixed-size 10x10 board, resulting in the possibility that each node uncovers anywhere between 10-20 additional potential solution paths. A breadth-first search would be computationally infeasible; the structure of the game is such that it is inherently more efficient to fully explore an entire route and check its validity rather than exhaust individual paths as they are uncovered from state transitions. This is because of the fact that any single input board configuration is likely to have several valid solution paths.
+The approach this program takes toward generating a solution is aggressive optimization of a search through a very large solution space. Effectively, the simulator considers every possible transition from one state/board configuration to another (based on some very simple rules, summarized below), and explores each of these paths using a depth-first search strategy.
+
+In the worst case, there are six unique colors on a fixed-size 10x10 board, resulting in the possibility that each node uncovers anywhere between 10-20 additional potential solution paths. A breadth-first search would be computationally infeasible; the structure of the game is such that it is inherently more efficient to fully explore an entire route and check its validity rather than exhaust individual paths as they are uncovered from state transitions. This is because of the fact that any single input board configuration is likely to have several valid solution paths.
 
 Fortunately, the gameplay rules are simple enough that the state transitions can be modeled very precisely:
 
